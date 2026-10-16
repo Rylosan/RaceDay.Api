@@ -4,10 +4,10 @@
 -- SQL Server
 -- =========================================================
 
-CREATE DATABASE RaceDayDb;
+CREATE DATABASE RaceDayPart1Db;
 GO
 
-USE RaceDayDb;
+USE RaceDayPart1Db;
 GO
 
 -- =========================================================
