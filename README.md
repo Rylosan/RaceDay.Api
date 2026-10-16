@@ -341,3 +341,28 @@ RaceDay uses standard HTTP response codes, including:
 | `401 Unauthorized` | Authentication is missing or invalid |
 | `403 Forbidden` | User is authenticated but does not have permission |
 | `404 Not Found` | Requested resource does not exist |
+
+## Automated Testing
+
+The RaceDay API includes automated integration tests using xUnit, Entity Framework Core InMemory, and ASP.NET Core MVC Testing.
+
+The test suite currently contains 14 passing tests covering:
+
+- User registration and login
+- Invalid login attempts
+- Event creation and viewing
+- Role-based event restrictions
+- Participant event enrolment
+- Duplicate enrolment prevention
+- Result authorization
+- Organiser ownership restrictions
+- Route information creation and viewing
+- Route information role restrictions
+
+Run all automated tests with:
+
+```powershell
+dotnet test RaceDay.slnx
+```
+
+All 14 tests should pass successfully.
