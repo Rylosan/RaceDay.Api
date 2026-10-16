@@ -168,3 +168,99 @@ The RaceDay database uses the following main relationships:
 - A participant may enrol only once in the same event.
 
 Entity Framework Core is used to map these relationships and enforce the database structure.
+
+## Authentication
+
+RaceDay uses JSON Web Tokens (JWT) to authenticate users and role-based authorization to restrict protected endpoints.
+
+Two roles are supported:
+
+- `Organiser`
+- `Participant`
+
+### Register a User
+
+Users can register through:
+
+```text
+POST /api/Auth/register
+```
+
+Example organiser registration:
+
+```json
+{
+  "firstName": "Race",
+  "lastName": "Organiser",
+  "email": "organiser@example.com",
+  "password": "password123!",
+  "role": "Organiser"
+}
+```
+
+Example participant registration:
+
+```json
+{
+  "firstName": "Race",
+  "lastName": "Participant",
+  "email": "participant@example.com",
+  "password": "password123!",
+  "role": "Participant"
+}
+```
+
+Passwords are hashed using BCrypt before being stored in the database.
+
+### Login
+
+Registered users can log in through:
+
+```text
+POST /api/Auth/login
+```
+
+Example:
+
+```json
+{
+  "email": "organiser@example.com",
+  "password": "password123!"
+}
+```
+
+A successful login returns a JWT token.
+
+## Using JWT Authentication in Swagger
+
+1. Start the RaceDay API.
+2. Open the Swagger UI in your browser.
+3. Register a user or log in using `/api/Auth/login`.
+4. Copy the JWT token returned by the API.
+5. Click the **Authorize** button near the top of Swagger.
+6. Paste the JWT token into the authorization field.
+7. Click **Authorize**.
+8. Close the authorization window.
+
+Swagger will now send the JWT token with requests to protected endpoints.
+
+The API uses role-based authorization. An authenticated user may therefore still receive:
+
+```text
+403 Forbidden
+```
+
+when attempting an operation that is not permitted for their role.
+
+For example:
+
+- Only an `Organiser` can create an event.
+- Only a `Participant` can create an enrolment.
+- Organisers can modify only events that they own.
+- Participants can delete only their own enrolments.
+
+An invalid or missing authentication token on a protected endpoint results in:
+
+```text
+401 Unauthorized
+``` 
