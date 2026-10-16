@@ -264,3 +264,80 @@ An invalid or missing authentication token on a protected endpoint results in:
 ```text
 401 Unauthorized
 ``` 
+## API Endpoint Reference
+
+All protected endpoints require a valid JWT token. Role restrictions are shown where applicable.
+
+### Authentication
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/Auth/register` | Public | Register a new organiser or participant |
+| POST | `/api/Auth/login` | Public | Log in and receive a JWT token |
+
+### User Profile
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/Users/profile` | Authenticated | View the logged-in user's profile |
+| PUT | `/api/Users/profile` | Authenticated | Update the logged-in user's profile |
+
+### Events
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/Events` | Authenticated | View all events |
+| GET | `/api/Events/{id}` | Authenticated | View a specific event |
+| POST | `/api/Events` | Organiser | Create a new event |
+| PUT | `/api/Events/{id}` | Organiser | Update an event owned by the organiser |
+| DELETE | `/api/Events/{id}` | Organiser | Delete an event owned by the organiser |
+
+### Categories
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/events/{eventId}/categories` | Authenticated | View categories for an event |
+| POST | `/api/events/{eventId}/categories` | Organiser | Add a category to an owned event |
+| PUT | `/api/categories/{id}` | Organiser | Update a category belonging to an owned event |
+| DELETE | `/api/categories/{id}` | Organiser | Delete a category belonging to an owned event |
+
+### Enrolments
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/Enrollments` | Participant | Enrol in an event and select a category |
+| GET | `/api/Enrollments/me` | Participant | View the logged-in participant's enrolments |
+| DELETE | `/api/Enrollments/{id}` | Participant | Cancel the participant's own enrolment |
+
+A participant cannot enrol more than once in the same event.
+
+### Results
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/Results` | Organiser | Record a result for an enrolment |
+| PUT | `/api/Results/{id}` | Organiser | Update a participant result |
+| GET | `/api/Results/me` | Participant | View the logged-in participant's results |
+| GET | `/api/events/{eventId}/results` | Authenticated | View results for an event |
+
+Organisers can record or modify results only for events they own.
+
+### Route Information
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/events/{eventId}/route` | Authenticated | View route information for an event |
+| PUT | `/api/events/{eventId}/route` | Organiser | Create or update route information for an owned event |
+
+## Common HTTP Status Codes
+
+RaceDay uses standard HTTP response codes, including:
+
+| Status Code | Meaning |
+|---|---|
+| `200 OK` | Request completed successfully |
+| `204 No Content` | Resource successfully deleted |
+| `400 Bad Request` | Invalid request or business rule violation |
+| `401 Unauthorized` | Authentication is missing or invalid |
+| `403 Forbidden` | User is authenticated but does not have permission |
+| `404 Not Found` | Requested resource does not exist |
