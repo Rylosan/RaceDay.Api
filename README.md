@@ -366,3 +366,14 @@ dotnet test RaceDay.slnx
 ```
 
 All 14 tests should pass successfully.
+
+## Part 1 Documentation
+
+The Part 1 design and planning artifacts for RaceDay are included in this repository:
+
+- **Entity Relationship Diagram (ERD):** `Documentation/RaceDay_ERD.pdf`
+- **Editable ERD source:** `Documentation/RaceDay_ERD.drawio`
+- **API Endpoint Plan:** `Documentation/API-Endpoint-Plan.md`
+- **SQL Server Database Script:** `Database/RaceDayDatabase.sql`
+
+The database script creates the RaceDay database structure, including primary keys, foreign keys, relationships, and sample data. The script has been tested successfully in SQL Server Management Studio.
