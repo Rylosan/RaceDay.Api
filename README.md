@@ -1,23 +1,47 @@
-# RaceDay API
+# RaceDay
 
-RaceDay is an ASP.NET Core Web API for managing South African road events such as running, walking, and cycling events.
+RaceDay is a full-stack event management application built with ASP.NET Core and .NET 8. It is designed to manage South African road events, including running, walking, and cycling events.
 
-The system allows organisers to create and manage events, categories, route information, enrolments, and participant results. Participants can browse events, enrol in event categories, manage their profiles, and view their results.
+The application provides a web interface for participants and organisers, supported by a RESTful Web API.
+
+Organisers can create and manage events, categories, routes, enrolments, and participant results. Participants can browse events, enrol in categories, manage their profiles, and view their results.
+
+Event images are stored in Azure Blob Storage, while SQL Server is used for application data. Both the API and MVC web application can run together using Docker Compose.
+
+## Features
+
+- User registration and JWT authentication.
+- Role-based access for organisers and participants.
+- Event creation and management.
+- Event category management.
+- Route information management.
+- Participant enrolments and cancellation.
+- Participant profile management.
+- Results recording and viewing.
+- Event image uploads and retrieval using Azure Blob Storage.
+- MVC web interface.
+- Automated tests using xUnit.
+- GitHub Actions continuous integration.
+- Docker containerisation for the API and web application.
 
 ## Technologies Used
 
-- ASP.NET Core Web API
-- .NET 8
-- C#
-- Entity Framework Core
-- SQL Server / LocalDB
-- JWT Authentication
-- BCrypt password hashing
-- Swagger / OpenAPI
-- xUnit
-- Entity Framework Core In-Memory Database for automated tests
-- Git
-- GitHub Actions
+| Technology | Purpose |
+|---|---|
+| C# / .NET 8 | Application development |
+| ASP.NET Core Web API | Backend REST API |
+| ASP.NET Core MVC | Web frontend |
+| Entity Framework Core | Database access |
+| SQL Server | Relational database |
+| JWT | Authentication |
+| BCrypt | Password hashing |
+| Swagger / OpenAPI | API documentation |
+| Azure Blob Storage | Event image storage |
+| xUnit | Automated testing |
+| Docker | Application containerisation |
+| Docker Compose | Multi-container orchestration |
+| Git / GitHub | Version control |
+| GitHub Actions | Continuous integration |
 
 ## User Roles
 
@@ -57,48 +81,59 @@ RaceDay.Api/
 │   ├── DTOs/
 │   ├── Migrations/
 │   ├── Models/
-│   └── Services/
+│   ├── Services/
+│   └── Dockerfile
+├── RaceDay.Web/
+│   ├── Controllers/
+│   ├── Views/
+│   ├── wwwroot/
+│   └── Dockerfile
 ├── RaceDay.API.Tests/
+├── Documentation/
+├── Database/
+├── docker-compose.yml
 ├── RaceDay.slnx
 ├── .gitignore
 └── README.md
+```
 
-## Setup Instructions
+## Prerequisites
 
-### Prerequisites
-
-Before running RaceDay, make sure the following are installed:
+For local development:
 
 - .NET 8 SDK
 - SQL Server or SQL Server LocalDB
-- SQL Server Management Studio (SSMS)
+- SQL Server Management Studio (SSMS), recommended
 - Git
 - Visual Studio or Visual Studio Code
 
-### 1. Clone the Repository
+For Docker deployment:
 
-Clone the RaceDay repository and open the project folder.
+- Docker Desktop
+- Docker Compose
+
+An Azure Storage account and private blob container are required for event image storage.
+
+## Getting Started
+
+### 1. Clone the repository
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/Rylosan/RaceDay.Api.git
 cd RaceDay.Api
 ```
 
-Replace `<repository-url>` with the URL of the RaceDay GitHub repository.
-
-### 2. Restore Dependencies
-
-Restore the NuGet packages:
+### 2. Restore dependencies
 
 ```powershell
 dotnet restore RaceDay.slnx
 ```
 
-### 3. Database Configuration
+### 3. Configure the database
 
 RaceDay uses SQL Server with Entity Framework Core.
 
-The default development connection string uses SQL Server LocalDB:
+The default API development connection string uses SQL Server LocalDB:
 
 ```text
 Server=(localdb)\MSSQLLocalDB;Database=RaceDayDb;Trusted_Connection=True;TrustServerCertificate=True;
@@ -113,9 +148,7 @@ The database contains the following main tables:
 - Results
 - RouteInfos
 
-### 4. Create the Database
-
-Entity Framework Core migrations are included in the project.
+### 4. Apply database migrations
 
 From the `RaceDay.API` folder, run:
 
@@ -125,49 +158,178 @@ dotnet ef database update
 
 This creates the `RaceDayDb` database and applies the existing migrations.
 
-### 5. Configure the JWT Signing Key
+### 5. Configure application secrets
 
-For security, the JWT signing key is not stored in the Git repository.
+Sensitive configuration must not be committed to Git.
 
-From the `RaceDay.API` folder, initialise .NET User Secrets if required:
+From the `RaceDay.API` folder, initialise User Secrets if required:
 
 ```powershell
 dotnet user-secrets init
 ```
 
-Set a local JWT signing key:
+Configure the JWT signing key:
 
 ```powershell
 dotnet user-secrets set "Jwt:Key" "your-long-development-secret-key"
 ```
 
-The key should be sufficiently long for JWT signing and should not be committed to source control.
+Configure Azure Blob Storage:
 
-### 6. Run the API
+```powershell
+dotnet user-secrets set "AzureStorage:ConnectionString" "YOUR_STORAGE_CONNECTION_STRING"
+dotnet user-secrets set "AzureStorage:ContainerName" "race-day-media"
+```
 
-From the `RaceDay.API` folder, run:
+Use your own secure development values. Never commit connection strings, passwords, or signing keys.
+
+## Running the Applications Locally
+
+### Run the API
+
+From the `RaceDay.API` folder:
 
 ```powershell
 dotnet run
 ```
 
-The terminal will display the local address where the API is running.
+Open the Swagger UI using the address displayed in the terminal, followed by `/swagger`.
 
-Open the `/swagger` path in a browser to access the Swagger UI.
+### Run the MVC application
 
-## Database Relationships
+Open a second terminal and navigate to `RaceDay.Web`:
 
-The RaceDay database uses the following main relationships:
+```powershell
+cd RaceDay.Web
+dotnet run
+```
 
-- One organiser can create many events.
-- One event can contain many categories.
-- One participant can have many enrolments.
-- Each enrolment belongs to one event, one participant, and one category.
-- Each enrolment can have one result.
-- Each event can have one route information record.
-- A participant may enrol only once in the same event.
+The MVC application communicates with the API using its configured API base URL.
 
-Entity Framework Core is used to map these relationships and enforce the database structure.
+## Docker Deployment
+
+RaceDay includes Dockerfiles for both the API and MVC application, along with a Docker Compose configuration.
+
+Docker Compose starts:
+
+- `api` – the RaceDay ASP.NET Core Web API.
+- `web` – the RaceDay MVC frontend.
+
+SQL Server and Azure Blob Storage remain external services.
+
+### Docker configuration
+
+The Docker Compose configuration uses the following environment variables:
+
+| Variable | Purpose |
+|---|---|
+| `JWT_KEY` | JWT signing key |
+| `SQL_PASSWORD` | SQL Server login password |
+| `AZURE_STORAGE_CONNECTION_STRING` | Azure Storage connection string |
+| `AZURE_STORAGE_CONTAINER` | Azure blob container name |
+
+For the local Docker setup, these values can be loaded from the API project's .NET User Secrets.
+
+Run the following from the solution root in PowerShell:
+
+```powershell
+$secrets = dotnet user-secrets list --project .\RaceDay.API\RaceDay.API.csproj
+
+function Get-SecretValue($name) {
+    $line = $secrets | Where-Object {
+        $_ -match "^$([regex]::Escape($name))\s*="
+    } | Select-Object -First 1
+
+    if (-not $line) {
+        return $null
+    }
+
+    $separator = $line.IndexOf("=")
+    return $line.Substring($separator + 1).Trim()
+}
+
+$env:JWT_KEY = Get-SecretValue "Jwt:Key"
+$env:SQL_PASSWORD = Get-SecretValue "Docker:SqlPassword"
+$env:AZURE_STORAGE_CONNECTION_STRING = Get-SecretValue "AzureStorage:ConnectionString"
+$env:AZURE_STORAGE_CONTAINER = Get-SecretValue "AzureStorage:ContainerName"
+
+if (
+    $env:JWT_KEY -and
+    $env:SQL_PASSWORD -and
+    $env:AZURE_STORAGE_CONNECTION_STRING -and
+    $env:AZURE_STORAGE_CONTAINER
+) {
+    Write-Host "All required secrets loaded."
+} else {
+    Write-Host "One or more required secrets are missing."
+}
+```
+
+Keep the same PowerShell session open while running Docker Compose, because the environment variables are session-specific.
+
+### Build the Docker images
+
+From the solution root:
+
+```powershell
+docker compose build
+```
+
+### Start the application
+
+```powershell
+docker compose up -d
+```
+
+### Access the applications
+
+| Application | Local address |
+|---|---|
+| MVC website | http://localhost:8081 |
+| Web API | http://localhost:5049 |
+| Swagger UI | http://localhost:5049/swagger |
+
+### Check container status
+
+```powershell
+docker compose ps
+```
+
+### View application logs
+
+```powershell
+docker compose logs -f
+```
+
+To view only API logs:
+
+```powershell
+docker compose logs -f api
+```
+
+To view only MVC logs:
+
+```powershell
+docker compose logs -f web
+```
+
+### Stop the application
+
+```powershell
+docker compose down
+```
+
+This stops and removes the application containers without deleting the SQL Server databases.
+
+## Azure Blob Storage
+
+RaceDay uses Azure Blob Storage to store event images.
+
+The storage container is configured as private. Images are accessed through authenticated application endpoints rather than anonymous public blob access.
+
+The API handles image uploads and retrieval, while the MVC application displays images through the API.
+
+Azure Storage configuration is supplied through environment variables or .NET User Secrets during development.
 
 ## Authentication
 
@@ -178,9 +340,7 @@ Two roles are supported:
 - `Organiser`
 - `Participant`
 
-### Register a User
-
-Users can register through:
+### Register a user
 
 ```text
 POST /api/Auth/register
@@ -214,8 +374,6 @@ Passwords are hashed using BCrypt before being stored in the database.
 
 ### Login
 
-Registered users can log in through:
-
 ```text
 POST /api/Auth/login
 ```
@@ -231,48 +389,29 @@ Example:
 
 A successful login returns a JWT token.
 
-## Using JWT Authentication in Swagger
+### Using JWT authentication in Swagger
 
 1. Start the RaceDay API.
-2. Open the Swagger UI in your browser.
+2. Open Swagger UI.
 3. Register a user or log in using `/api/Auth/login`.
-4. Copy the JWT token returned by the API.
-5. Click the **Authorize** button near the top of Swagger.
-6. Paste the JWT token into the authorization field.
-7. Click **Authorize**.
-8. Close the authorization window.
+4. Copy the returned JWT token.
+5. Click **Authorize** in Swagger.
+6. Enter the token in the authorization field.
+7. Click **Authorize**, then close the window.
 
-Swagger will now send the JWT token with requests to protected endpoints.
+An authenticated user may still receive `403 Forbidden` when attempting an operation that is not permitted for their role.
 
-The API uses role-based authorization. An authenticated user may therefore still receive:
+An invalid or missing token on a protected endpoint results in `401 Unauthorized`.
 
-```text
-403 Forbidden
-```
-
-when attempting an operation that is not permitted for their role.
-
-For example:
-
-- Only an `Organiser` can create an event.
-- Only a `Participant` can create an enrolment.
-- Organisers can modify only events that they own.
-- Participants can delete only their own enrolments.
-
-An invalid or missing authentication token on a protected endpoint results in:
-
-```text
-401 Unauthorized
-``` 
 ## API Endpoint Reference
 
-All protected endpoints require a valid JWT token. Role restrictions are shown where applicable.
+All protected endpoints require a valid JWT token.
 
 ### Authentication
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/api/Auth/register` | Public | Register a new organiser or participant |
+| POST | `/api/Auth/register` | Public | Register a user |
 | POST | `/api/Auth/login` | Public | Log in and receive a JWT token |
 
 ### User Profile
@@ -288,26 +427,26 @@ All protected endpoints require a valid JWT token. Role restrictions are shown w
 |---|---|---|---|
 | GET | `/api/Events` | Authenticated | View all events |
 | GET | `/api/Events/{id}` | Authenticated | View a specific event |
-| POST | `/api/Events` | Organiser | Create a new event |
-| PUT | `/api/Events/{id}` | Organiser | Update an event owned by the organiser |
-| DELETE | `/api/Events/{id}` | Organiser | Delete an event owned by the organiser |
+| POST | `/api/Events` | Organiser | Create an event |
+| PUT | `/api/Events/{id}` | Organiser | Update an owned event |
+| DELETE | `/api/Events/{id}` | Organiser | Delete an owned event |
 
 ### Categories
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| GET | `/api/events/{eventId}/categories` | Authenticated | View categories for an event |
-| POST | `/api/events/{eventId}/categories` | Organiser | Add a category to an owned event |
-| PUT | `/api/categories/{id}` | Organiser | Update a category belonging to an owned event |
-| DELETE | `/api/categories/{id}` | Organiser | Delete a category belonging to an owned event |
+| GET | `/api/events/{eventId}/categories` | Authenticated | View event categories |
+| POST | `/api/events/{eventId}/categories` | Organiser | Add a category |
+| PUT | `/api/categories/{id}` | Organiser | Update a category |
+| DELETE | `/api/categories/{id}` | Organiser | Delete a category |
 
 ### Enrolments
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/api/Enrollments` | Participant | Enrol in an event and select a category |
-| GET | `/api/Enrollments/me` | Participant | View the logged-in participant's enrolments |
-| DELETE | `/api/Enrollments/{id}` | Participant | Cancel the participant's own enrolment |
+| POST | `/api/Enrollments` | Participant | Enrol in an event |
+| GET | `/api/Enrollments/me` | Participant | View own enrolments |
+| DELETE | `/api/Enrollments/{id}` | Participant | Cancel own enrolment |
 
 A participant cannot enrol more than once in the same event.
 
@@ -315,10 +454,10 @@ A participant cannot enrol more than once in the same event.
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/api/Results` | Organiser | Record a result for an enrolment |
-| PUT | `/api/Results/{id}` | Organiser | Update a participant result |
-| GET | `/api/Results/me` | Participant | View the logged-in participant's results |
-| GET | `/api/events/{eventId}/results` | Authenticated | View results for an event |
+| POST | `/api/Results` | Organiser | Record a result |
+| PUT | `/api/Results/{id}` | Organiser | Update a result |
+| GET | `/api/Results/me` | Participant | View own results |
+| GET | `/api/events/{eventId}/results` | Authenticated | View event results |
 
 Organisers can record or modify results only for events they own.
 
@@ -326,12 +465,24 @@ Organisers can record or modify results only for events they own.
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| GET | `/api/events/{eventId}/route` | Authenticated | View route information for an event |
-| PUT | `/api/events/{eventId}/route` | Organiser | Create or update route information for an owned event |
+| GET | `/api/events/{eventId}/route` | Authenticated | View event route information |
+| PUT | `/api/events/{eventId}/route` | Organiser | Create or update route information |
+
+## Database Relationships
+
+The RaceDay database uses the following main relationships:
+
+- One organiser can create many events.
+- One event can contain many categories.
+- One participant can have many enrolments.
+- Each enrolment belongs to one event, one participant, and one category.
+- Each enrolment can have one result.
+- Each event can have one route information record.
+- A participant may enrol only once in the same event.
+
+Entity Framework Core maps these relationships and manages the database structure.
 
 ## Common HTTP Status Codes
-
-RaceDay uses standard HTTP response codes, including:
 
 | Status Code | Meaning |
 |---|---|
@@ -344,36 +495,58 @@ RaceDay uses standard HTTP response codes, including:
 
 ## Automated Testing
 
-The RaceDay API includes automated integration tests using xUnit, Entity Framework Core InMemory, and ASP.NET Core MVC Testing.
+The RaceDay API includes automated integration tests using:
 
-The test suite currently contains 14 passing tests covering:
+- xUnit
+- Entity Framework Core InMemory
+- ASP.NET Core MVC Testing
 
-- User registration and login
-- Invalid login attempts
-- Event creation and viewing
-- Role-based event restrictions
-- Participant event enrolment
-- Duplicate enrolment prevention
-- Result authorization
-- Organiser ownership restrictions
-- Route information creation and viewing
-- Route information role restrictions
+The test suite currently contains **16 passing tests** covering:
 
-Run all automated tests with:
+- User registration and login.
+- Invalid login attempts.
+- Event creation and viewing.
+- Role-based event restrictions.
+- Participant event enrolment.
+- Duplicate enrolment prevention.
+- Result authorization.
+- Organiser ownership restrictions.
+- Route information creation and viewing.
+- Route information role restrictions.
+
+Run all automated tests from the solution root:
 
 ```powershell
 dotnet test RaceDay.slnx
 ```
 
-All 14 tests should pass successfully.
+All 16 tests should pass successfully.
+
+## Continuous Integration
+
+GitHub Actions is configured to build the solution and execute automated tests when changes are pushed to the repository.
+
+Workflow configuration:
+
+```text
+.github/workflows/dotnet.yml
+```
+
+This helps ensure that changes do not introduce build errors or failing tests.
 
 ## Part 1 Documentation
 
-The Part 1 design and planning artifacts for RaceDay are included in this repository:
+The Part 1 design and planning artifacts are included in the repository:
 
 - **Entity Relationship Diagram (ERD):** `Documentation/RaceDay_ERD.pdf`
 - **Editable ERD source:** `Documentation/RaceDay_ERD.drawio`
 - **API Endpoint Plan:** `Documentation/API-Endpoint-Plan.md`
 - **SQL Server Database Script:** `Database/RaceDayDatabase.sql`
 
-The database script creates the RaceDay database structure, including primary keys, foreign keys, relationships, and sample data. The script has been tested successfully in SQL Server Management Studio.
+The database script creates the RaceDay database structure, including primary keys, foreign keys, relationships, and sample data.
+
+## Repository
+
+GitHub repository:
+
+https://github.com/Rylosan/RaceDay.Api
