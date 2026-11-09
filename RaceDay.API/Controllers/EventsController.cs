@@ -1,9 +1,11 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.API.Data;
 using RaceDay.API.DTOs;
 using RaceDay.API.Models;
+using RaceDay.API.Services;
 using System.Security.Claims;
 
 namespace RaceDay.API.Controllers;
@@ -13,10 +15,14 @@ namespace RaceDay.API.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly RaceDayDbContext _context;
+    private readonly BlobStorageService _blobStorageService;
 
-    public EventsController(RaceDayDbContext context)
+    public EventsController(
+        RaceDayDbContext context,
+        BlobStorageService blobStorageService)
     {
         _context = context;
+        _blobStorageService = blobStorageService;
     }
 
     // Both Organisers and Participants can browse events
@@ -35,7 +41,33 @@ public class EventsController : ControllerBase
                 e.Location,
                 e.DistanceKm,
                 e.EventType,
-                Organiser = e.Organiser.FirstName + " " + e.Organiser.LastName
+                Organiser = e.Organiser.FirstName + " " +
+                            e.Organiser.LastName
+            })
+            .ToListAsync();
+
+        return Ok(events);
+    }
+
+    // Organiser views only their own events
+    [HttpGet("mine")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> GetMyEvents()
+    {
+        var organiserId = int.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var events = await _context.Events
+            .Where(e => e.OrganiserId == organiserId)
+            .Select(e => new
+            {
+                e.Id,
+                e.Name,
+                e.Description,
+                e.EventDate,
+                e.Location,
+                e.DistanceKm,
+                e.EventType
             })
             .ToListAsync();
 
@@ -59,7 +91,8 @@ public class EventsController : ControllerBase
                 e.Location,
                 e.DistanceKm,
                 e.EventType,
-                Organiser = e.Organiser.FirstName + " " + e.Organiser.LastName
+                Organiser = e.Organiser.FirstName + " " +
+                            e.Organiser.LastName
             })
             .FirstOrDefaultAsync();
 
@@ -122,6 +155,70 @@ public class EventsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(raceEvent);
+    }
+
+    // Organiser can upload an image for their own event
+    [HttpPost("{id}/image")]
+    [Authorize(Roles = "Organiser")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadEventImage(
+        int id,
+        IFormFile file)
+    {
+        var organiserId = int.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var raceEvent = await _context.Events.FindAsync(id);
+
+        if (raceEvent == null)
+            return NotFound("Event not found.");
+
+        if (raceEvent.OrganiserId != organiserId)
+            return Forbid();
+
+        try
+        {
+            var blobName = await _blobStorageService.UploadImageAsync(
+                file,
+                $"events/{id}");
+
+            raceEvent.ImageBlobName = blobName;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Event image uploaded successfully.",
+                EventId = id,
+                ImageBlobName = blobName
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // Authenticated users can retrieve an event image
+    [HttpGet("{id}/image")]
+    [Authorize]
+    public async Task<IActionResult> GetEventImage(int id)
+    {
+        var raceEvent = await _context.Events.FindAsync(id);
+
+        if (raceEvent == null)
+            return NotFound("Event not found.");
+
+        if (string.IsNullOrWhiteSpace(raceEvent.ImageBlobName))
+            return NotFound("This event does not have an image.");
+
+        var image = await _blobStorageService.DownloadImageAsync(
+            raceEvent.ImageBlobName);
+
+        if (image == null)
+            return NotFound("Event image not found.");
+
+        return File(image.Value.Content, image.Value.ContentType);
     }
 
     // Organiser can delete only their own event

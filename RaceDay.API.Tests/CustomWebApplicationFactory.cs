@@ -16,7 +16,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
 
-        // Fake configuration used only by automated tests
+        // Test-only configuration. No real Azure credentials are used.
         builder.ConfigureAppConfiguration((context, config) =>
         {
             var testSettings = new Dictionary<string, string?>
@@ -24,7 +24,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:Key"] =
                     "RaceDay-Test-JWT-Key-For-Automated-Testing-123456789",
                 ["Jwt:Issuer"] = "RaceDayAPI",
-                ["Jwt:Audience"] = "RaceDayUsers"
+                ["Jwt:Audience"] = "RaceDayUsers",
+
+                ["AzureStorage:ConnectionString"] = "UseDevelopmentStorage=true",
+                ["AzureStorage:ContainerName"] = "race-day-media"
             };
 
             config.AddInMemoryCollection(testSettings);

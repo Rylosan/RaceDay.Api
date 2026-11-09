@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -119,5 +120,52 @@ public class EnrollmentsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    // Organiser views participants enrolled in their event
+    [HttpGet("event/{eventId}")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> GetEventEnrollments(int eventId)
+    {
+        var organiserId = int.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var raceEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (raceEvent == null)
+            return NotFound("Event not found.");
+
+        if (raceEvent.OrganiserId != organiserId)
+            return Forbid();
+
+        var enrollments = await _context.Enrollments
+            .Where(e => e.EventId == eventId)
+            .Select(e => new
+            {
+                e.Id,
+                e.EventId,
+                ParticipantId = e.ParticipantId,
+                ParticipantName =
+                    e.Participant.FirstName + " " +
+                    e.Participant.LastName,
+                e.CategoryId,
+                CategoryName = e.Category.Name,
+                e.EnrolledAt,
+
+                HasResult = e.Result != null,
+                ResultId = e.Result != null
+                    ? e.Result.Id
+                    : (int?)null,
+                FinishTime = e.Result != null
+                    ? e.Result.FinishTime
+                    : (TimeSpan?)null,
+                Position = e.Result != null
+                    ? e.Result.Position
+                    : (int?)null
+            })
+            .ToListAsync();
+
+        return Ok(enrollments);
     }
 }

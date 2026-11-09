@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +16,40 @@ builder.Services.AddDbContext<RaceDayDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<BlobStorageService>();
+
+// Azure Blob Storage
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+
+    var connectionString = configuration["AzureStorage:ConnectionString"];
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException(
+            "Azure Storage connection string is missing.");
+    }
+
+    return new BlobServiceClient(connectionString);
+});
+
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+
+    var containerName = configuration["AzureStorage:ContainerName"];
+
+    if (string.IsNullOrWhiteSpace(containerName))
+    {
+        throw new InvalidOperationException(
+            "Azure Storage container name is missing.");
+    }
+
+    var blobServiceClient = sp.GetRequiredService<BlobServiceClient>();
+
+    return blobServiceClient.GetBlobContainerClient(containerName);
+});
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

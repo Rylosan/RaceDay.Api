@@ -1,4 +1,5 @@
-name: RaceDay API CI
+
+name: RaceDay CI
 
 on:
   push:
@@ -19,15 +20,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore API dependencies
-        run: dotnet restore RaceDay.API/RaceDay.API.csproj
+      - name: Restore solution
+        run: dotnet restore RaceDay.slnx
 
-      - name: Restore test dependencies
-        run: dotnet restore RaceDay.API.Tests/RaceDay.API.Tests.csproj
-
-      - name: Build
-        run: dotnet build RaceDay.API.Tests/RaceDay.API.Tests.csproj --configuration Release --no-restore
+      - name: Build solution
+        run: dotnet build RaceDay.slnx --configuration Release --no-restore
 
       - name: Run automated tests
         run: dotnet test RaceDay.API.Tests/RaceDay.API.Tests.csproj --configuration Release --no-build
-        

@@ -26,3 +26,7 @@ packages/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local development configuration and user files
+**/appsettings.Development.json
+**/*.csproj.user

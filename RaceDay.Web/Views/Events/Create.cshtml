@@ -1,0 +1,60 @@
+﻿@model RaceDay.Web.Models.CreateEventModel
+
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<div class="container mt-4" style="max-width: 700px;">
+    <h2 class="mb-4">Create a Race Event</h2>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Event Name</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="EventDate" class="form-label">Event Date</label>
+            <input asp-for="EventDate" type="datetime-local" class="form-control" />
+            <span asp-validation-for="EventDate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Location" class="form-label">Location</label>
+            <input asp-for="Location" class="form-control" />
+            <span asp-validation-for="Location" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="DistanceKm" class="form-label">Distance (km)</label>
+            <input asp-for="DistanceKm" type="number" step="0.1" class="form-control" />
+            <span asp-validation-for="DistanceKm" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="EventType" class="form-label">Event Type</label>
+            <select asp-for="EventType" class="form-select">
+                <option value="">Select event type</option>
+                <option value="Running">Running</option>
+                <option value="Cycling">Cycling</option>
+                <option value="Swimming">Swimming</option>
+                <option value="Triathlon">Triathlon</option>
+                <option value="Other">Other</option>
+            </select>
+            <span asp-validation-for="EventType" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Event</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

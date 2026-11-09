@@ -1,0 +1,53 @@
+@model List<RaceDay.Web.Models.Result>
+
+@{
+    ViewData["Title"] = "My Results";
+}
+
+<h2>My Race Results</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">
+        You don't have any race results yet.
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Category</th>
+                <th>Finish Time</th>
+                <th>Position</th>
+                <th>Recorded At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var result in Model)
+            {
+                <tr>
+                    <td>@result.EventName</td>
+                    <td>@result.CategoryName</td>
+                    <td>@result.FinishTime</td>
+                    <td>@result.Position</td>
+                    <td>@result.RecordedAt.ToLocalTime().ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-controller="Dashboard"
+   asp-action="Participant"
+   class="btn btn-secondary">
+    Back to Dashboard
+</a>

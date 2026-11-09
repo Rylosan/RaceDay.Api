@@ -105,6 +105,10 @@ namespace RaceDay.API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("ImageBlobName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -1,3 +1,4 @@
+
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -81,9 +82,7 @@ public class EventTests : IClassFixture<CustomWebApplicationFactory>
                 eventType = "Running"
             });
 
-        Assert.Equal(
-            HttpStatusCode.Forbidden,
-            response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -97,5 +96,90 @@ public class EventTests : IClassFixture<CustomWebApplicationFactory>
         var response = await _client.GetAsync("/api/Events");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Participant_CannotUploadEventImage()
+    {
+        // Create an event as an organiser first.
+        var organiserToken = await RegisterAndGetToken("Organiser");
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", organiserToken);
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Events",
+            new
+            {
+                name = "Upload Permission Test",
+                description = "Testing image upload permissions",
+                eventDate = "2026-12-01T07:00:00",
+                location = "Cape Town",
+                distanceKm = 10,
+                eventType = "Running"
+            });
+
+        createResponse.EnsureSuccessStatusCode();
+
+        var eventJson =
+            await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        var eventId = eventJson.GetProperty("id").GetInt32();
+
+        // Attempt to upload as a participant.
+        var participantToken =
+            await RegisterAndGetToken("Participant");
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", participantToken);
+
+        using var content = new MultipartFormDataContent();
+
+        var response = await _client.PostAsync(
+            $"/api/Events/{eventId}/image",
+            content);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AuthenticatedUser_GetsNotFoundWhenEventHasNoImage()
+    {
+        // Create an event as an organiser.
+        var organiserToken = await RegisterAndGetToken("Organiser");
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", organiserToken);
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Events",
+            new
+            {
+                name = "Image Test Event",
+                description = "Testing an event without an image",
+                eventDate = "2026-12-01T07:00:00",
+                location = "Cape Town",
+                distanceKm = 10,
+                eventType = "Running"
+            });
+
+        createResponse.EnsureSuccessStatusCode();
+
+        var eventJson =
+            await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        var eventId = eventJson.GetProperty("id").GetInt32();
+
+        // Request the image as an authenticated participant.
+        var participantToken =
+            await RegisterAndGetToken("Participant");
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", participantToken);
+
+        var response = await _client.GetAsync(
+            $"/api/Events/{eventId}/image");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

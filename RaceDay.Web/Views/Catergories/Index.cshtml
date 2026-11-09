@@ -1,0 +1,57 @@
+﻿@model List<RaceDay.Web.Models.CategoryModel>
+
+@{
+    ViewData["Title"] = "Event Categories";
+}
+
+<div class="container mt-4">
+    <h2>Event Categories</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    @if (Context.Session.GetString("Role") == "Organiser")
+    {
+        <a asp-action="Create"
+           asp-route-eventId="@ViewBag.EventId"
+           class="btn btn-primary mb-3">
+            Add Category
+        </a>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            No categories have been added to this event yet.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var category in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">@category.Name</h5>
+                            <p class="card-text">@category.Description</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <a asp-controller="Events"
+       asp-action="Index"
+       class="btn btn-secondary mt-3">
+        Back to Events
+    </a>
+</div>

@@ -27,6 +27,10 @@ public class Event
     [MaxLength(50)]
     public string EventType { get; set; } = string.Empty;
 
+    // Azure Blob Storage image name
+    [MaxLength(500)]
+    public string? ImageBlobName { get; set; }
+
     public User Organiser { get; set; } = null!;
 
     public ICollection<Category> Categories { get; set; } = new List<Category>();

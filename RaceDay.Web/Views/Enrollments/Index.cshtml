@@ -1,0 +1,62 @@
+﻿
+@model List<RaceDay.Web.Models.EnrollmentModel>
+
+@{
+    ViewData["Title"] = "My Enrolments";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">My Enrolments</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            You have not enrolled in any events yet.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var enrollment in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@enrollment.EventName</h5>
+                            <p><strong>Category:</strong> @enrollment.CategoryName</p>
+                            <p><strong>Enrolled:</strong> @enrollment.EnrolledAt.ToString("dd MMM yyyy")</p>
+
+                            <form asp-action="Cancel" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@enrollment.Id" />
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Are you sure you want to cancel this enrolment?');">
+                                    Cancel Enrolment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <a asp-controller="Events" asp-action="Index"
+       class="btn btn-primary mt-3">Browse Events</a>
+</div>

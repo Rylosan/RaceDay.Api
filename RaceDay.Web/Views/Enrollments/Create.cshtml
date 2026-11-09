@@ -1,0 +1,56 @@
+﻿
+@model RaceDay.Web.Models.CreateEnrollmentModel
+
+@{
+    ViewData["Title"] = "Enrol in Event";
+    var categories = ViewBag.Categories as List<RaceDay.Web.Models.CategoryModel>
+                     ?? new List<RaceDay.Web.Models.CategoryModel>();
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h2 class="mb-4">Enrol in Event</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!categories.Any())
+    {
+        <div class="alert alert-warning">
+            No categories are available for this event yet.
+        </div>
+    }
+    else
+    {
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="EventId" value="@ViewBag.EventId" />
+
+            <div class="mb-3">
+                <label asp-for="CategoryId" class="form-label">
+                    Select a Category
+                </label>
+
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">Choose a category</option>
+
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Confirm Enrolment
+            </button>
+
+            <a asp-controller="Events" asp-action="Index"
+               class="btn btn-secondary">Cancel</a>
+        </form>
+    }
+</div>
